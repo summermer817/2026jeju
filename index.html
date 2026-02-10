@@ -2,8 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>濟州島春季家族旅行</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍊</text></svg>">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +26,6 @@
                     },
                     colors: {
                         jeju: {
-                            // Muted, Eye-friendly Palette
                             orange: '#F09A69',     // Softer Tangerine
                             lightOrange: '#FDECE4',
                             blue: '#7AB8BF',       // Muted Sea/Sage
@@ -46,20 +48,32 @@
 
     <style>
         /* Global Styles */
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%; /* Fallback */
+            height: 100dvh; /* Dynamic Viewport Height for Mobile */
             background-color: #F5F5F0;
             color: #595045;
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
+            overscroll-behavior: none; /* Prevent pull-to-refresh acting weirdly */
+            overflow: hidden; /* Lock body scroll */
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Smooth scrolling container */
+        #app-content {
+            -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
+            scroll-behavior: smooth;
+        }
+
         /* Timeline Styles */
         .timeline-line {
             position: absolute;
-            left: 5.5rem; /* Adjusted for time column width */
+            left: 5.5rem; 
             top: 0;
             bottom: 0;
             width: 2px;
@@ -79,57 +93,74 @@
             background-color: #F09A69;
             border-color: #F09A69;
         }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden relative selection:bg-jeju-orange selection:text-white">
+<body class="flex flex-col relative selection:bg-jeju-orange selection:text-white">
 
-    <!-- HEADER (Simplified) -->
-    <header class="px-6 pt-10 pb-4 bg-[#F5F5F0] sticky top-0 z-20 flex justify-between items-end border-b border-gray-200/50">
+    <!-- HEADER -->
+    <header class="px-6 pt-safe-top pb-4 bg-[#F5F5F0] sticky top-0 z-30 flex justify-between items-end border-b border-gray-200/50 shrink-0" style="padding-top: max(2.5rem, env(safe-area-inset-top));">
         <div>
             <p class="text-xs font-bold text-jeju-blue mb-1 tracking-wider">2026.04.19 - 04.25</p>
             <h1 class="text-2xl font-black text-jeju-text">濟州島家族旅 🍊</h1>
         </div>
-        <!-- Simple Weather Widget Placeholder -->
-        <div class="flex flex-col items-end">
-             <div class="text-xs text-jeju-subtext font-medium">濟州 Si</div>
-             <div class="flex items-center gap-1 text-jeju-text">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <div class="flex flex-col items-end gap-1">
+             <!-- Sync Button -->
+             <button id="syncBtn" onclick="syncAllData()" class="text-[10px] bg-white border border-gray-200 text-jeju-text px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-transform flex items-center gap-1 hover:bg-gray-50 cursor-pointer">
+                ☁️ 同步所有資料
+             </button>
+             <div class="flex items-center gap-1 text-jeju-text text-xs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 <span class="font-bold">19°C</span>
              </div>
         </div>
     </header>
 
     <!-- MAIN CONTENT AREA -->
-    <main id="app-content" class="flex-1 overflow-y-auto hide-scrollbar pb-24 relative">
+    <!-- Increased bottom padding to prevent overlap with navbar -->
+    <main id="app-content" class="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-40 relative z-0">
         <!-- Content injected by JS -->
     </main>
 
-    <!-- FLOATING ACTION BUTTON -->
-    <button onclick="openAddModal()" class="fab-btn absolute bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-30 active:scale-90 transition-transform">
+    <!-- FLOATING ACTION BUTTON (Fixed position above nav) -->
+    <button onclick="openAddModal()" class="fab-btn fixed bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-40 active:scale-90 transition-transform cursor-pointer">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
     </button>
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bg-white/95 backdrop-blur-md shadow-float absolute bottom-0 w-full pb-safe pt-2 px-6 z-40 border-t border-gray-100">
+    <!-- BOTTOM NAVIGATION (Fixed at bottom) -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-float fixed bottom-0 left-0 right-0 w-full pb-safe-bottom pt-2 px-6 z-50 border-t border-gray-100" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
         <div class="flex justify-between items-center h-16 max-w-sm mx-auto">
-            <button onclick="switchTab('itinerary')" class="nav-item flex flex-col items-center gap-1 w-16 group active" data-tab="itinerary">
+            <button onclick="switchTab('itinerary')" class="nav-item flex flex-col items-center gap-1 w-16 group active cursor-pointer" data-tab="itinerary">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 </div>
                 <span class="text-[10px] font-bold text-gray-300 group-[.active]:text-jeju-orange">行程</span>
             </button>
             
-            <button onclick="switchTab('budget')" class="nav-item flex flex-col items-center gap-1 w-16 group" data-tab="budget">
+            <button onclick="switchTab('budget')" class="nav-item flex flex-col items-center gap-1 w-16 group cursor-pointer" data-tab="budget">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
                 <span class="text-[10px] font-bold text-gray-300 group-[.active]:text-jeju-orange">記帳</span>
             </button>
             
-            <button onclick="switchTab('todo')" class="nav-item flex flex-col items-center gap-1 w-16 group" data-tab="todo">
+            <button onclick="switchTab('todo')" class="nav-item flex flex-col items-center gap-1 w-16 group cursor-pointer" data-tab="todo">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                 </div>
@@ -138,25 +169,32 @@
         </div>
     </nav>
 
-    <!-- MODAL OVERLAY -->
-    <div id="modal-overlay" class="fixed inset-0 bg-jeju-text/20 backdrop-blur-[2px] z-50 hidden opacity-0 transition-opacity duration-300 flex items-end sm:items-center justify-center">
-        <div id="modal-content" class="bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto shadow-2xl">
+    <!-- MODAL OVERLAY (Highest Z-Index) -->
+    <div id="modal-overlay" class="fixed inset-0 bg-jeju-text/40 backdrop-blur-[3px] z-[60] hidden opacity-0 transition-opacity duration-300 flex items-end sm:items-center justify-center">
+        <div id="modal-content" class="bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[85vh] overflow-y-auto shadow-2xl safe-pb">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="modal-title" class="text-xl font-bold text-jeju-text">新增項目</h2>
-                <button onclick="closeModal()" class="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100">
+                <button onclick="closeModal()" class="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100 cursor-pointer">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             <div id="modal-body"></div>
         </div>
     </div>
+    
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-jeju-text text-white px-6 py-3 rounded-full shadow-lg z-[70] transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex items-center gap-2 whitespace-nowrap">
+        <span id="toast-msg">✅ 已同步至雲端</span>
+    </div>
 
     <!-- SCRIPTS -->
     <script>
-        // --- DATA & CONFIG ---
+        // *** CONFIGURATION ***
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvrwnSfsQHluC-bwpAnRcluUZfeAZeIGGNqBZwc_ReoEaxZxzDQcgKq-XSbHUT7LnBnw/exec'; 
+
         const KRW_TO_TWD = 0.024;
         
-        // Inheriting data structure from previous steps
+        // Default Data
         const DEFAULT_DATA = {
             itinerary: [
                  { id: 'd1-1', day: 1, time: '17:10', title: '咪爸妹抵達 (TW690)', location: 'Jeju Airport', category: 'transport', weather: 'sunny', notes: '高雄出發 13:40', participants: ['dad_sis'] },
@@ -164,7 +202,7 @@
                 { id: 'd1-3', day: 1, time: '18:00', title: '租車取車', location: 'Rental Car House', category: 'transport', weather: 'sunny', notes: '確認車況拍照', participants: ['all'] },
                 { id: 'd1-4', day: 1, time: '19:30', title: '西歸浦黑豬肉', location: 'Seogwipo', category: 'food', weather: 'cloudy', notes: '第一餐吃好的！', participants: ['all'] },
                 { id: 'd1-5', day: 1, time: '21:00', title: '入住西歸浦', location: 'Seogwipo Hotel', category: 'hotel', weather: 'cloudy', notes: '預計住3晚', participants: ['all'] },
-
+                
                 { id: 'd2-1', day: 2, time: '09:00', title: '爸爸會議 (APCO)', location: 'Haevichi Hotel', category: 'activity', weather: 'sunny', notes: '會議第一天', participants: ['dad_sis'] },
                 { id: 'd2-2', day: 2, time: '10:00', title: '史努比庭園', location: 'Snoopy Garden', category: 'sights', weather: 'sunny', notes: '姊妹行程', participants: ['sister', 'dad_sis'] },
                 { id: 'd2-3', day: 2, time: '13:00', title: '午餐', location: 'Pyoseon Beach', category: 'food', weather: 'sunny', notes: '表善附近', participants: ['sister', 'dad_sis'] },
@@ -219,6 +257,92 @@
         const formatMoney = (num) => new Intl.NumberFormat('en-US').format(num);
         const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
+        // --- GOOGLE SHEETS SYNC ---
+        function syncToGoogleSheets(type, data) {
+            if (GOOGLE_SCRIPT_URL.includes('script.google.com') === false) {
+                console.warn('請先設定 Google Apps Script 網址');
+                return Promise.reject('URL not set');
+            }
+
+            const payload = {
+                type: type,
+                data: data
+            };
+
+            return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // 重要：避免 CORS 錯誤
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                console.log('Saved to Google Sheets:', type, data.title || data.id);
+            }).catch(err => {
+                console.error('Failed to save:', err);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgSpan = document.getElementById('toast-msg');
+            msgSpan.innerText = msg || '✅ 已同步至雲端';
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        async function syncAllData() {
+            if(!confirm("確定要將目前網頁上的「所有資料」同步寫入 Google Sheet 嗎？\n\n注意：這會將 App 內現有的所有行程、記帳、待辦，逐筆新增到 Sheet 中。\n\n請確保 Sheet 內沒有重複資料，或您打算新增備份。")) return;
+
+            const btn = document.getElementById('syncBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 同步中...';
+            btn.disabled = true;
+
+            showToast("🚀 開始同步...");
+
+            const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+            try {
+                // Prepare sorted data for cleaner sync
+                const sortedItinerary = [...appData.itinerary].sort((a,b) => {
+                    if (a.day !== b.day) return a.day - b.day;
+                    return a.time.localeCompare(b.time);
+                });
+                
+                const sortedBudget = [...appData.budget].sort((a,b) => new Date(a.date) - new Date(b.date)); // Oldest first for sync log
+
+                // Sync Itinerary
+                for (const item of sortedItinerary) {
+                    await syncToGoogleSheets('itinerary', item);
+                    await delay(150); 
+                }
+
+                // Sync Budget
+                for (const item of sortedBudget) {
+                    await syncToGoogleSheets('budget', item);
+                    await delay(150);
+                }
+
+                // Sync Todos
+                for (const item of appData.todos) {
+                    await syncToGoogleSheets('todo', item);
+                    await delay(150);
+                }
+
+                showToast("✅ 所有資料同步完成！");
+            } catch (e) {
+                console.error(e);
+                showToast("❌ 同步過程發生錯誤");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function render() {
             const content = document.getElementById('app-content');
             content.innerHTML = '';
@@ -230,9 +354,9 @@
             updateNav();
         }
 
-        // --- ITINERARY RENDERER (Updated for Clean Layout) ---
+        // --- RENDERERS ---
+        // 1. ITINERARY
         function renderItinerary(container) {
-            // 1. Day Selector (Sticky)
             const days = [1, 2, 3, 4, 5, 6, 7];
             const dates = ['4/19', '4/20', '4/21', '4/22', '4/23', '4/24', '4/25'];
             
@@ -243,7 +367,6 @@
             daySelector.className = 'flex gap-2 overflow-x-auto hide-scrollbar snap-x';
             daySelector.innerHTML = days.map((d, index) => {
                 const isActive = currentDay === d;
-                // Muted Active Color vs Muted Inactive
                 const activeClass = 'bg-jeju-text text-white shadow-md';
                 const inactiveClass = 'bg-white text-jeju-subtext border border-gray-100';
                 
@@ -257,80 +380,62 @@
             stickyHeader.appendChild(daySelector);
             container.appendChild(stickyHeader);
 
-            // 2. Timeline Layout
             const timelineWrapper = document.createElement('div');
-            timelineWrapper.className = 'px-4 relative min-h-[50vh]'; // Ensure height
-            
-            // Vertical Line
+            timelineWrapper.className = 'px-4 relative min-h-[50vh]'; 
             const line = document.createElement('div');
             line.className = 'timeline-line';
             timelineWrapper.appendChild(line);
 
-            const dayItems = appData.itinerary.filter(i => i.day === currentDay).sort((a,b) => a.time.localeCompare(b.time));
+            // Auto Sort: Time ascending
+            const dayItems = appData.itinerary
+                .filter(i => i.day === currentDay)
+                .sort((a,b) => a.time.localeCompare(b.time));
 
             if (dayItems.length === 0) {
-                 timelineWrapper.innerHTML = `
-                    <div class="text-center mt-20 p-8">
-                        <div class="text-4xl mb-2 opacity-50">🍊</div>
-                        <p class="text-jeju-subtext text-sm">今日暫無行程</p>
-                    </div>`;
+                 timelineWrapper.innerHTML = `<div class="text-center mt-20 p-8"><div class="text-4xl mb-2 opacity-50">🍊</div><p class="text-jeju-subtext text-sm">今日暫無行程</p></div>`;
             } else {
                 dayItems.forEach(item => {
                     const row = document.createElement('div');
-                    row.className = 'flex items-start mb-6 relative z-0 group'; // Group for hover effects
-                    
-                    // Time Column (Left)
+                    row.className = 'flex items-start mb-6 relative z-0 group';
                     const timeCol = document.createElement('div');
                     timeCol.className = 'w-16 text-right pr-6 pt-1 flex-shrink-0';
                     timeCol.innerHTML = `<span class="text-sm font-bold text-jeju-text block">${item.time}</span>`;
                     
-                    // Dot (Center)
                     const dotWrapper = document.createElement('div');
                     dotWrapper.className = 'absolute left-[5.5rem] top-2 -translate-x-1/2 w-3 h-3 bg-white border-2 rounded-full z-10 ' + getCategoryBorder(item.category);
                     
-                    // Content Card (Right)
+                    // Added onClick event for editing
                     const card = document.createElement('div');
-                    card.className = 'flex-1 bg-white rounded-2xl p-4 shadow-soft border border-gray-50 ml-6 active:scale-[0.99] transition-transform duration-200';
+                    card.className = 'flex-1 bg-white rounded-2xl p-4 shadow-soft border border-gray-50 ml-6 active:scale-[0.99] transition-transform duration-200 cursor-pointer';
+                    card.setAttribute('onclick', `openModal('itinerary', '${item.id}')`);
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-1">
                             <h3 class="text-base font-bold text-jeju-text leading-tight">${item.title}</h3>
                             ${item.participants ? renderMiniAvatars(item.participants) : ''}
                         </div>
-                        
                         <div class="flex items-center gap-2 mb-2">
                              <span class="text-[10px] px-2 py-0.5 rounded bg-jeju-bg text-jeju-subtext font-medium">${getCategoryName(item.category)}</span>
-                             <a href="https://map.naver.com/v5/search/${item.location}" target="_blank" class="text-xs text-jeju-blue hover:underline truncate max-w-[120px] flex items-center gap-1">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                ${item.location}
+                             <a href="https://map.naver.com/v5/search/${item.location || item.title}" target="_blank" onclick="event.stopPropagation()" class="text-xs text-jeju-blue hover:underline truncate max-w-[120px] flex items-center gap-1">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${item.location || item.title}
                              </a>
                         </div>
-                        
-                        ${item.notes ? `<p class="text-xs text-jeju-subtext bg-[#FAF9F6] p-2 rounded-lg leading-relaxed border-l-2 border-jeju-accent/30">${item.notes}</p>` : ''}
-                        
-                        <button onclick="deleteItem('itinerary', '${item.id}')" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-gray-300 p-1">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
+                        ${item.notes ? `<p class="text-xs text-jeju-subtext bg-[#FAF9F6] p-2 rounded-lg leading-relaxed border-l-2 border-jeju-accent/30 whitespace-pre-line">${item.notes}</p>` : ''}
+                        <button onclick="event.stopPropagation(); deleteItem('itinerary', '${item.id}')" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-gray-300 p-1 hover:text-red-400 transition-opacity"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                     `;
-
-                    row.appendChild(timeCol);
-                    row.appendChild(dotWrapper);
-                    row.appendChild(card);
+                    row.appendChild(timeCol); row.appendChild(dotWrapper); row.appendChild(card);
                     timelineWrapper.appendChild(row);
                 });
             }
-
             container.appendChild(timelineWrapper);
         }
 
-        // --- BUDGET RENDERER (Cleaned up) ---
+        // 2. BUDGET
         function renderBudget(container) {
-            container.className += " px-4"; // Add padding to container
-            
+            container.className += " px-4";
             const totalKRW = appData.budget.reduce((acc, curr) => acc + parseInt(curr.amount), 0);
             const sisterTotal = appData.budget.filter(b => b.payer === 'sister').reduce((acc, curr) => acc + parseInt(curr.amount), 0);
             const familyTotal = appData.budget.filter(b => b.payer === 'dad_sis').reduce((acc, curr) => acc + parseInt(curr.amount), 0);
 
-            // Summary Card - Softer Gradient
             const summary = document.createElement('div');
             summary.className = 'mt-4 bg-[#F09A69] text-white rounded-3xl p-6 shadow-lg shadow-orange-100 mb-6 relative overflow-hidden';
             summary.innerHTML = `
@@ -339,8 +444,7 @@
                     <p class="text-xs text-white/80 mb-1">總支出 Total</p>
                     <h2 class="text-3xl font-black tracking-tight">₩ ${formatMoney(totalKRW)}</h2>
                     <div onclick="toggleCurrency(this, ${totalKRW})" class="inline-flex items-center gap-1 mt-2 bg-white/20 px-3 py-1 rounded-full text-[10px] font-medium cursor-pointer backdrop-blur-md active:bg-white/30 transition-colors">
-                        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                        換算台幣
+                        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 換算台幣
                     </div>
                 </div>
                 <div class="flex gap-4 mt-6 pt-4 border-t border-white/10">
@@ -350,71 +454,48 @@
             `;
             container.appendChild(summary);
 
-            // Transaction List
             const list = document.createElement('div');
             list.className = 'space-y-3 pb-8';
             
-            if(appData.budget.length === 0) {
-                 list.innerHTML = `<p class="text-center text-jeju-subtext text-sm py-8">還沒有記帳紀錄</p>`;
-            } else {
-                list.innerHTML = appData.budget.map(item => `
-                    <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-50 shadow-sm">
-                        <div class="flex items-center gap-3">
-                             <div class="w-10 h-10 rounded-full bg-jeju-bg flex items-center justify-center text-lg text-jeju-text">
-                                ${getCategoryIcon(item.category)}
-                             </div>
-                             <div>
-                                <h4 class="font-bold text-jeju-text text-sm">${item.title}</h4>
-                                <p class="text-[10px] text-jeju-subtext">${item.payer === 'sister' ? '姊姊付' : '咪爸妹付'}</p>
-                             </div>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-bold text-jeju-text text-sm">₩ ${formatMoney(item.amount)}</p>
-                            <button onclick="deleteItem('budget', '${item.id}')" class="text-[10px] text-red-300 px-2 py-1">刪除</button>
-                        </div>
+            // Auto Sort: Date Descending
+            const sortedBudget = [...appData.budget].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(sortedBudget.length === 0) list.innerHTML = `<p class="text-center text-jeju-subtext text-sm py-8">還沒有記帳紀錄</p>`;
+            else list.innerHTML = sortedBudget.map(item => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-50 shadow-sm cursor-pointer active:scale-[0.99] transition-transform" onclick="openModal('budget', '${item.id}')">
+                    <div class="flex items-center gap-3">
+                         <div class="w-10 h-10 rounded-full bg-jeju-bg flex items-center justify-center text-lg text-jeju-text">${getCategoryIcon(item.category)}</div>
+                         <div><h4 class="font-bold text-jeju-text text-sm">${item.title}</h4><p class="text-[10px] text-jeju-subtext">${item.date} · ${item.payer === 'sister' ? '姊姊付' : '咪爸妹付'}</p></div>
                     </div>
-                `).join('');
-            }
+                    <div class="text-right"><p class="font-bold text-jeju-text text-sm">₩ ${formatMoney(item.amount)}</p><button onclick="event.stopPropagation(); deleteItem('budget', '${item.id}')" class="text-[10px] text-red-300 px-2 py-1 hover:text-red-500">刪除</button></div>
+                </div>
+            `).join('');
             container.appendChild(list);
         }
 
-        // --- TODO RENDERER ---
+        // 3. TODO
         function renderTodo(container) {
             container.className += " px-4 pt-4";
             const list = document.createElement('div');
             list.className = 'space-y-3';
-            
             const sortedTodos = [...appData.todos].sort((a,b) => a.done - b.done);
 
             list.innerHTML = sortedTodos.map(item => `
-                <div class="bg-white p-4 rounded-2xl shadow-soft border border-gray-50 flex items-start gap-3 ${item.done ? 'opacity-60 bg-gray-50' : ''}">
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${item.id}')" class="custom-checkbox w-5 h-5 mt-1 rounded border-2 border-gray-200 cursor-pointer appearance-none transition-all">
-                    
-                    <div class="flex-1">
-                        <h4 class="font-bold text-jeju-text text-sm ${item.done ? 'line-through text-jeju-subtext' : ''}">${item.title}</h4>
-                        <div class="flex flex-wrap gap-2 mt-2">
-                             ${renderMiniAvatars(item.participants)}
-                             ${item.needPay && !item.done ? `<button onclick="transferToBudget('${item.title}')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded border border-green-100 font-bold flex items-center gap-1">加入記帳</button>` : ''}
-                        </div>
+                <div class="bg-white p-4 rounded-2xl shadow-soft border border-gray-50 flex items-start gap-3 ${item.done ? 'opacity-60 bg-gray-50' : ''} cursor-pointer active:scale-[0.99] transition-transform" onclick="openModal('todo', '${item.id}')">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${item.id}')" onclick="event.stopPropagation()" class="custom-checkbox w-5 h-5 mt-1 rounded border-2 border-gray-200 cursor-pointer appearance-none transition-all">
+                    <div class="flex-1"><h4 class="font-bold text-jeju-text text-sm ${item.done ? 'line-through text-jeju-subtext' : ''}">${item.title}</h4>
+                        <div class="flex flex-wrap gap-2 mt-2">${renderMiniAvatars(item.participants)}${item.needPay && !item.done ? `<button onclick="event.stopPropagation(); transferToBudget('${item.title}')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded border border-green-100 font-bold flex items-center gap-1">加入記帳</button>` : ''}</div>
                     </div>
-                    <button onclick="deleteItem('todo', '${item.id}')" class="text-gray-300 hover:text-red-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    <button onclick="event.stopPropagation(); deleteItem('todo', '${item.id}')" class="text-gray-300 hover:text-red-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                 </div>
             `).join('');
-            
             if(sortedTodos.length === 0) list.innerHTML = `<p class="text-center text-jeju-subtext text-sm mt-10">待辦事項已清空 ✨</p>`;
-
             container.appendChild(list);
         }
 
         // --- COMMON UTILS ---
-        function switchTab(tab) {
-            currentTab = tab;
-            render();
-        }
-        function setDay(d) {
-            currentDay = d;
-            render();
-        }
+        function switchTab(tab) { currentTab = tab; render(); }
+        function setDay(d) { currentDay = d; render(); }
         function updateNav() {
             document.querySelectorAll('.nav-item').forEach(el => {
                 if(el.dataset.tab === currentTab) {
@@ -430,163 +511,233 @@
                 }
             });
         }
-        
-        function getCategoryBorder(cat) {
-            const map = { 'food': 'border-orange-300', 'sights': 'border-blue-300', 'shopping': 'border-pink-300', 'activity': 'border-purple-300', 'transport': 'border-green-300', 'hotel': 'border-indigo-300' };
-            return map[cat] || 'border-gray-300';
-        }
-        function getCategoryName(cat) {
-            const map = { 'food': '美食', 'sights': '景點', 'shopping': '購物', 'activity': '活動', 'transport': '交通', 'hotel': '住宿' };
-            return map[cat] || '行程';
-        }
-        function getCategoryIcon(cat) {
-            const map = { 'food': '🍜', 'sights': '📸', 'shopping': '🛍️', 'activity': '🎫', 'transport': '🚗', 'hotel': '🏨' };
-            return map[cat] || '📌';
-        }
+        function getCategoryBorder(cat) { const map = { 'food': 'border-orange-300', 'sights': 'border-blue-300', 'shopping': 'border-pink-300', 'activity': 'border-purple-300', 'transport': 'border-green-300', 'hotel': 'border-indigo-300' }; return map[cat] || 'border-gray-300'; }
+        function getCategoryName(cat) { const map = { 'food': '美食', 'sights': '景點', 'shopping': '購物', 'activity': '活動', 'transport': '交通', 'hotel': '住宿' }; return map[cat] || '行程'; }
+        function getCategoryIcon(cat) { const map = { 'food': '🍜', 'sights': '📸', 'shopping': '🛍️', 'activity': '🎫', 'transport': '🚗', 'hotel': '🏨' }; return map[cat] || '📌'; }
         function renderMiniAvatars(parts) {
             if(!parts) return '';
-            const isSis = parts.includes('sister');
-            const isDad = parts.includes('dad_sis');
-            const isAll = parts.includes('all') || (isSis && isDad);
-            
+            const isSis = parts.includes('sister'); const isDad = parts.includes('dad_sis'); const isAll = parts.includes('all') || (isSis && isDad);
             if(isAll) return `<span class="text-[10px] text-jeju-orange font-bold bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">全員</span>`;
             let html = '';
             if(isSis) html += `<span class="text-[10px] text-pink-400 font-bold bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100 mr-1">姊</span>`;
             if(isDad) html += `<span class="text-[10px] text-blue-400 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">咪爸妹</span>`;
             return html;
         }
-
         function toggleCurrency(el, krw) {
             const twd = Math.round(krw * KRW_TO_TWD);
-            if (el.innerText.includes('台幣')) {
-                el.innerText = `≈ NT$ ${formatMoney(twd)}`;
-            } else {
-                el.innerHTML = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 換算台幣`;
-            }
+            if (el.innerText.includes('台幣')) el.innerText = `≈ NT$ ${formatMoney(twd)}`;
+            else el.innerHTML = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 換算台幣`;
         }
-
-        // --- ACTIONS (Delete, Toggle, Form) ---
         function deleteItem(type, id) {
-            if(!confirm('確定要刪除嗎？')) return;
+            if(!confirm('確定要刪除嗎？(僅刪除本地紀錄)')) return;
             if(type === 'itinerary') appData.itinerary = appData.itinerary.filter(i => i.id != id);
             else if(type === 'budget') appData.budget = appData.budget.filter(i => i.id != id);
             else if(type === 'todo') appData.todos = appData.todos.filter(i => i.id != id);
             saveToLocal(); render();
         }
-        function toggleTodo(id) {
-            const t = appData.todos.find(i=>i.id==id); if(t) { t.done = !t.done; saveToLocal(); render(); }
-        }
+        function toggleTodo(id) { const t = appData.todos.find(i=>i.id==id); if(t) { t.done = !t.done; saveToLocal(); render(); } }
         
-        // Modal & Form Logic (Simplified for brevity but fully functional)
+        // Modal & Form Logic
+        // Modified to handle editing: accepts optional 'editId'
         function openAddModal() {
+            openModal(currentTab);
+        }
+
+        function openModal(type, editId = null) {
+            // Determine tab type if not provided (for FAB)
+            if(!type) type = currentTab;
+
             const m = document.getElementById('modal-overlay'); m.classList.remove('hidden'); 
             setTimeout(() => { m.classList.remove('opacity-0'); document.getElementById('modal-content').classList.remove('translate-y-full'); }, 10);
             
-            // Build Form HTML based on currentTab... (Same logic as before, just restyled inputs)
             const body = document.getElementById('modal-body');
+            const titleEl = document.getElementById('modal-title');
             let formHtml = '';
-            const inputClass = "w-full bg-gray-50 rounded-xl p-3 border border-gray-100 focus:border-jeju-orange focus:ring-1 focus:ring-jeju-orange outline-none transition-all";
-            const btnClass = "w-full bg-jeju-orange text-white font-bold py-3.5 rounded-xl shadow-md active:scale-95 transition-transform mt-2";
+            
+            // Get item data if editing
+            let editData = null;
+            if(editId) {
+                if(type === 'itinerary') editData = appData.itinerary.find(i => i.id === editId);
+                else if(type === 'budget') editData = appData.budget.find(i => i.id === editId);
+                else if(type === 'todo') editData = appData.todos.find(i => i.id === editId);
+            }
 
-            if(currentTab === 'itinerary') {
+            const modeText = editData ? '修改' : '新增';
+            titleEl.innerText = `${modeText}${type === 'itinerary' ? '行程' : type === 'budget' ? '記帳' : '待辦'}`;
+
+            const inputClass = "w-full bg-gray-50 rounded-xl p-3 border border-gray-100 focus:border-jeju-orange focus:ring-1 focus:ring-jeju-orange outline-none transition-all";
+            const btnClass = "w-full bg-jeju-orange text-white font-bold py-3.5 rounded-xl shadow-md active:scale-95 transition-transform mt-2 flex justify-center items-center gap-2";
+
+            if(type === 'itinerary') {
+                const day = editData ? editData.day : currentDay;
+                const time = editData ? editData.time : '';
+                const title = editData ? editData.title : '';
+                const location = editData ? editData.location : ''; // New location field
+                const notes = editData ? editData.notes : '';
+                const cat = editData ? editData.category : 'food';
+                const p_sister = editData ? editData.participants.includes('sister') || editData.participants.includes('all') : true;
+                const p_family = editData ? editData.participants.includes('dad_sis') || editData.participants.includes('all') : true;
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'itinerary')" class="space-y-4">
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
                     <div class="grid grid-cols-2 gap-3">
-                        <select name="day" class="${inputClass}"><option value="1">D1 (4/19)</option><option value="2">D2 (4/20)</option><option value="3">D3 (4/21)</option><option value="4">D4 (4/22)</option><option value="5">D5 (4/23)</option><option value="6">D6 (4/24)</option><option value="7">D7 (4/25)</option></select>
-                        <input type="time" name="time" required class="${inputClass}">
+                        <select name="day" class="${inputClass}">
+                            ${[1,2,3,4,5,6,7].map(d => `<option value="${d}" ${d===day?'selected':''}>D${d} (4/${18+d})</option>`).join('')}
+                        </select>
+                        <input type="time" name="time" value="${time}" required class="${inputClass}">
                     </div>
-                    <input type="text" name="title" required placeholder="行程名稱" class="${inputClass}">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1">行程主題</label>
+                        <input type="text" name="title" value="${title}" required placeholder="例如：城山日出峰" class="${inputClass}">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1">地點 (用於導航)</label>
+                        <input type="text" name="location" value="${location}" required placeholder="例如：Seongsan Ilchulbong" class="${inputClass}">
+                    </div>
+                    
                     <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                        ${['food','sights','shopping','activity','transport','hotel'].map((c,i) => `
-                        <label class="cursor-pointer"><input type="radio" name="category" value="${c}" class="hidden peer" ${i===0?'checked':''}><div class="py-2 bg-gray-50 rounded-lg border border-transparent peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">${getCategoryName(c)}</div></label>
+                        ${['food','sights','shopping','activity','transport','hotel'].map((c) => `
+                        <label class="cursor-pointer"><input type="radio" name="category" value="${c}" class="hidden peer" ${c===cat?'checked':''}><div class="py-2 bg-gray-50 rounded-lg border border-transparent peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">${getCategoryName(c)}</div></label>
                         `).join('')}
                     </div>
                     <div class="flex gap-3 bg-gray-50 p-3 rounded-xl">
-                        <label class="flex items-center gap-2"><input type="checkbox" name="p_sister" checked class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">姊姊</span></label>
-                        <label class="flex items-center gap-2"><input type="checkbox" name="p_family" checked class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">咪爸妹</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" name="p_sister" ${p_sister?'checked':''} class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">姊姊</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" name="p_family" ${p_family?'checked':''} class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">咪爸妹</span></label>
                     </div>
-                    <textarea name="notes" placeholder="備註..." rows="2" class="${inputClass}"></textarea>
-                    <button type="submit" class="${btnClass}">新增</button>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 ml-1">備註 (可換行)</label>
+                        <textarea name="notes" placeholder="備註事項..." rows="3" class="${inputClass}">${notes}</textarea>
+                    </div>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
-            } else if (currentTab === 'budget') {
+            } else if (type === 'budget') {
+                const title = editData ? editData.title : '';
+                const amount = editData ? editData.amount : '';
+                const payer = editData ? editData.payer : 'sister';
+                const cat = editData ? editData.category : 'food';
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'budget')" class="space-y-4">
-                    <input type="text" name="title" id="b-title" required placeholder="項目名稱" class="${inputClass}">
-                    <input type="number" name="amount" required placeholder="金額 (KRW)" class="${inputClass} text-lg font-bold">
-                    <div class="flex gap-2"><label class="flex-1 text-center"><input type="radio" name="payer" value="sister" checked class="hidden peer"><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">姊姊付</div></label><label class="flex-1 text-center"><input type="radio" name="payer" value="dad_sis" class="hidden peer"><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">咪爸妹付</div></label></div>
-                    <select name="category" class="${inputClass}"><option value="food">飲食</option><option value="transport">交通</option><option value="shopping">購物</option><option value="ticket">門票</option><option value="hotel">住宿</option></select>
-                    <button type="submit" class="${btnClass}">記帳</button>
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
+                    <input type="text" name="title" id="b-title" value="${title}" required placeholder="項目名稱" class="${inputClass}">
+                    <input type="number" name="amount" value="${amount}" required placeholder="金額 (KRW)" class="${inputClass} text-lg font-bold">
+                    <div class="flex gap-2"><label class="flex-1 text-center"><input type="radio" name="payer" value="sister" class="hidden peer" ${payer==='sister'?'checked':''}><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">姊姊付</div></label><label class="flex-1 text-center"><input type="radio" name="payer" value="dad_sis" class="hidden peer" ${payer==='dad_sis'?'checked':''}><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">咪爸妹付</div></label></div>
+                    <select name="category" class="${inputClass}">
+                        <option value="food" ${cat==='food'?'selected':''}>飲食</option>
+                        <option value="transport" ${cat==='transport'?'selected':''}>交通</option>
+                        <option value="shopping" ${cat==='shopping'?'selected':''}>購物</option>
+                        <option value="ticket" ${cat==='ticket'?'selected':''}>門票</option>
+                        <option value="hotel" ${cat==='hotel'?'selected':''}>住宿</option>
+                    </select>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
             } else {
+                const title = editData ? editData.title : '';
+                const part = editData && editData.participants.length > 0 ? editData.participants[0] : 'all';
+                const needPay = editData ? editData.needPay : false;
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'todo')" class="space-y-4">
-                    <input type="text" name="title" required placeholder="待辦事項" class="${inputClass}">
-                    <select name="participant" class="${inputClass}"><option value="all">全員</option><option value="sister">姊姊</option><option value="dad_sis">咪爸妹</option></select>
-                    <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl"><input type="checkbox" name="needPay" class="custom-checkbox w-5 h-5 rounded"> <span class="text-sm text-gray-600">需要花錢?</span></label>
-                    <button type="submit" class="${btnClass}">新增</button>
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
+                    <input type="text" name="title" value="${title}" required placeholder="待辦事項" class="${inputClass}">
+                    <select name="participant" class="${inputClass}">
+                        <option value="all" ${part==='all'?'selected':''}>全員</option>
+                        <option value="sister" ${part==='sister'?'selected':''}>姊姊</option>
+                        <option value="dad_sis" ${part==='dad_sis'?'selected':''}>咪爸妹</option>
+                    </select>
+                    <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl"><input type="checkbox" name="needPay" ${needPay?'checked':''} class="custom-checkbox w-5 h-5 rounded"> <span class="text-sm text-gray-600">需要花錢?</span></label>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
             }
             body.innerHTML = formHtml;
-            
-             // Pre-select day in modal
-             if(currentTab === 'itinerary') {
-                setTimeout(() => {
-                    const sel = body.querySelector('select[name="day"]');
-                    if(sel) sel.value = currentDay;
-                }, 50);
-            }
         }
+
         function closeModal() {
             const m = document.getElementById('modal-overlay'); m.classList.add('opacity-0'); document.getElementById('modal-content').classList.add('translate-y-full'); setTimeout(() => m.classList.add('hidden'), 300);
         }
-        function transferToBudget(title) { switchTab('budget'); openAddModal(); setTimeout(() => document.getElementById('b-title').value = title, 100); }
+        function transferToBudget(title) { switchTab('budget'); openModal('budget'); setTimeout(() => document.getElementById('b-title').value = title, 100); }
 
         function handleFormSubmit(e, type) {
             e.preventDefault();
-            const formData = new FormData(e.target);
             
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = `<div class="spinner"></div>`;
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const editId = formData.get('id');
+            let newItem = null;
+
             if (type === 'itinerary') {
-                // Handle Participants
                 const participants = [];
                 if(formData.get('p_sister') === 'on') participants.push('sister');
                 if(formData.get('p_family') === 'on') participants.push('dad_sis');
-                if(participants.length === 0) participants.push('all'); // Default fallback
+                if(participants.length === 0) participants.push('all'); 
 
-                const newItem = {
-                    id: generateId(),
+                newItem = {
+                    id: editId || generateId(),
                     day: parseInt(formData.get('day')),
                     time: formData.get('time'),
                     title: formData.get('title'),
-                    location: formData.get('title'), // Simple mapping
+                    location: formData.get('location'), 
                     category: formData.get('category'),
-                    weather: 'sunny', // Mock
+                    weather: 'sunny', 
                     notes: formData.get('notes'),
                     participants: participants
                 };
-                appData.itinerary.push(newItem);
-                // Switch to the added day
+                
+                if (editId) {
+                    const idx = appData.itinerary.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.itinerary[idx] = newItem;
+                } else {
+                    appData.itinerary.push(newItem);
+                }
                 currentDay = newItem.day;
             } else if (type === 'budget') {
-                const newItem = {
-                    id: generateId(),
+                newItem = {
+                    id: editId || generateId(),
                     title: formData.get('title'),
                     amount: parseInt(formData.get('amount')),
                     payer: formData.get('payer'),
                     category: formData.get('category'),
                     date: new Date().toISOString().split('T')[0]
                 };
-                appData.budget.unshift(newItem); // Add to top
+                
+                if (editId) {
+                    const idx = appData.budget.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.budget[idx] = newItem;
+                } else {
+                    appData.budget.unshift(newItem); 
+                }
             } else if (type === 'todo') {
-                const newItem = {
-                    id: generateId(),
+                newItem = {
+                    id: editId || generateId(),
                     title: formData.get('title'),
-                    done: false,
+                    done: false, // Reset done status on edit? Or keep it? keeping simplistic for now
                     participants: [formData.get('participant')],
                     needPay: formData.get('needPay') === 'on'
                 };
-                appData.todos.push(newItem);
+                // If editing, preserve 'done' status
+                if (editId) {
+                    const oldItem = appData.todos.find(i => i.id === editId);
+                    if (oldItem) newItem.done = oldItem.done;
+                    
+                    const idx = appData.todos.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.todos[idx] = newItem;
+                } else {
+                    appData.todos.push(newItem);
+                }
             }
 
+            // 1. Save Local
             saveToLocal();
-            closeModal();
-            render();
+            
+            // 2. Sync to Cloud (Fire and Forget) - Works for both Add (Append) and Edit (Append new version)
+            syncToGoogleSheets(type, newItem);
+
+            // 3. UI Updates
+            setTimeout(() => {
+                closeModal();
+                render();
+            }, 500); 
         }
 
         render();
