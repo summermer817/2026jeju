@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>濟州島春季家族旅行</title>
     
     <!-- Tailwind CSS -->
@@ -45,15 +45,27 @@
 
     <style>
         /* Global Styles */
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%; /* Fallback */
+            height: 100dvh; /* Dynamic Viewport Height for Mobile */
             background-color: #F5F5F0;
             color: #595045;
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
+            overscroll-behavior: none; /* Prevent pull-to-refresh acting weirdly */
+            overflow: hidden; /* Lock body scroll */
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Smooth scrolling container */
+        #app-content {
+            -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
+            scroll-behavior: smooth;
+        }
 
         /* Timeline Styles */
         .timeline-line {
@@ -86,7 +98,6 @@
             border-top: 3px solid white;
             width: 20px;
             height: 20px;
-            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -95,17 +106,17 @@
         }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden relative selection:bg-jeju-orange selection:text-white">
+<body class="flex flex-col relative selection:bg-jeju-orange selection:text-white">
 
     <!-- HEADER -->
-    <header class="px-6 pt-10 pb-4 bg-[#F5F5F0] sticky top-0 z-20 flex justify-between items-end border-b border-gray-200/50">
+    <header class="px-6 pt-safe-top pb-4 bg-[#F5F5F0] sticky top-0 z-30 flex justify-between items-end border-b border-gray-200/50 shrink-0" style="padding-top: max(2.5rem, env(safe-area-inset-top));">
         <div>
             <p class="text-xs font-bold text-jeju-blue mb-1 tracking-wider">2026.04.19 - 04.25</p>
             <h1 class="text-2xl font-black text-jeju-text">濟州島家族旅 🍊</h1>
         </div>
         <div class="flex flex-col items-end gap-1">
              <!-- Sync Button -->
-             <button id="syncBtn" onclick="syncAllData()" class="text-[10px] bg-white border border-gray-200 text-jeju-text px-2 py-1 rounded-lg shadow-sm active:scale-95 transition-transform flex items-center gap-1 hover:bg-gray-50">
+             <button id="syncBtn" onclick="syncAllData()" class="text-[10px] bg-white border border-gray-200 text-jeju-text px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-transform flex items-center gap-1 hover:bg-gray-50 cursor-pointer">
                 ☁️ 同步所有資料
              </button>
              <div class="flex items-center gap-1 text-jeju-text text-xs">
@@ -116,37 +127,37 @@
     </header>
 
     <!-- MAIN CONTENT AREA -->
-    <!-- Increased bottom padding to prevent overlap with navbar -->
-    <main id="app-content" class="flex-1 overflow-y-auto hide-scrollbar pb-32 relative">
+    <!-- Added extra padding bottom to ensure scroll clears the nav bar -->
+    <main id="app-content" class="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-40 relative z-0">
         <!-- Content injected by JS -->
     </main>
 
-    <!-- FLOATING ACTION BUTTON -->
-    <button onclick="openModal()" class="fab-btn absolute bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-30 active:scale-90 transition-transform">
+    <!-- FLOATING ACTION BUTTON (Fixed position above nav) -->
+    <button onclick="openModal()" class="fab-btn fixed bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-40 active:scale-90 transition-transform cursor-pointer">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
     </button>
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bg-white/95 backdrop-blur-md shadow-float absolute bottom-0 w-full pb-safe pt-2 px-6 z-40 border-t border-gray-100">
+    <!-- BOTTOM NAVIGATION (Fixed at bottom) -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-float fixed bottom-0 left-0 right-0 w-full pb-safe-bottom pt-2 px-6 z-50 border-t border-gray-100" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
         <div class="flex justify-between items-center h-16 max-w-sm mx-auto">
-            <button onclick="switchTab('itinerary')" class="nav-item flex flex-col items-center gap-1 w-16 group active" data-tab="itinerary">
+            <button onclick="switchTab('itinerary')" class="nav-item flex flex-col items-center gap-1 w-16 group active cursor-pointer" data-tab="itinerary">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 </div>
                 <span class="text-[10px] font-bold text-gray-300 group-[.active]:text-jeju-orange">行程</span>
             </button>
             
-            <button onclick="switchTab('budget')" class="nav-item flex flex-col items-center gap-1 w-16 group" data-tab="budget">
+            <button onclick="switchTab('budget')" class="nav-item flex flex-col items-center gap-1 w-16 group cursor-pointer" data-tab="budget">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
                 <span class="text-[10px] font-bold text-gray-300 group-[.active]:text-jeju-orange">記帳</span>
             </button>
             
-            <button onclick="switchTab('todo')" class="nav-item flex flex-col items-center gap-1 w-16 group" data-tab="todo">
+            <button onclick="switchTab('todo')" class="nav-item flex flex-col items-center gap-1 w-16 group cursor-pointer" data-tab="todo">
                 <div class="icon-container px-4 py-1 rounded-2xl transition-all duration-300 group-[.active]:bg-jeju-lightOrange">
                     <svg class="w-6 h-6 text-gray-300 group-[.active]:text-jeju-orange transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                 </div>
@@ -155,12 +166,12 @@
         </div>
     </nav>
 
-    <!-- MODAL OVERLAY -->
-    <div id="modal-overlay" class="fixed inset-0 bg-jeju-text/20 backdrop-blur-[2px] z-50 hidden opacity-0 transition-opacity duration-300 flex items-end sm:items-center justify-center">
-        <div id="modal-content" class="bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto shadow-2xl">
+    <!-- MODAL OVERLAY (Highest Z-Index) -->
+    <div id="modal-overlay" class="fixed inset-0 bg-jeju-text/40 backdrop-blur-[3px] z-[60] hidden opacity-0 transition-opacity duration-300 flex items-end sm:items-center justify-center">
+        <div id="modal-content" class="bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[85vh] overflow-y-auto shadow-2xl safe-pb">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="modal-title" class="text-xl font-bold text-jeju-text">新增項目</h2>
-                <button onclick="closeModal()" class="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100">
+                <button onclick="closeModal()" class="p-2 bg-gray-50 text-gray-400 rounded-full hover:bg-gray-100 cursor-pointer">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -169,7 +180,7 @@
     </div>
     
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-jeju-text text-white px-6 py-3 rounded-full shadow-lg z-50 transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex items-center gap-2 whitespace-nowrap">
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-jeju-text text-white px-6 py-3 rounded-full shadow-lg z-[70] transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex items-center gap-2 whitespace-nowrap">
         <span id="toast-msg">✅ 已同步至雲端</span>
     </div>
 
