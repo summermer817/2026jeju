@@ -23,7 +23,6 @@
                     },
                     colors: {
                         jeju: {
-                            // Muted, Eye-friendly Palette
                             orange: '#F09A69',     // Softer Tangerine
                             lightOrange: '#FDECE4',
                             blue: '#7AB8BF',       // Muted Sea/Sage
@@ -59,7 +58,7 @@
         /* Timeline Styles */
         .timeline-line {
             position: absolute;
-            left: 5.5rem; /* Adjusted for time column width */
+            left: 5.5rem; 
             top: 0;
             bottom: 0;
             width: 2px;
@@ -87,7 +86,7 @@
             border-top: 3px solid white;
             width: 20px;
             height: 20px;
-            -webkit-animation: spin 1s linear infinite; /* Safari */
+            -webkit-animation: spin 1s linear infinite;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -117,12 +116,13 @@
     </header>
 
     <!-- MAIN CONTENT AREA -->
-    <main id="app-content" class="flex-1 overflow-y-auto hide-scrollbar pb-24 relative">
+    <!-- Increased bottom padding to prevent overlap with navbar -->
+    <main id="app-content" class="flex-1 overflow-y-auto hide-scrollbar pb-32 relative">
         <!-- Content injected by JS -->
     </main>
 
     <!-- FLOATING ACTION BUTTON -->
-    <button onclick="openAddModal()" class="fab-btn absolute bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-30 active:scale-90 transition-transform">
+    <button onclick="openModal()" class="fab-btn absolute bottom-24 right-6 w-14 h-14 bg-jeju-orange rounded-full text-white shadow-lg flex items-center justify-center z-30 active:scale-90 transition-transform">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -341,7 +341,7 @@
         }
 
         // --- RENDERERS ---
-        // 1. ITINERARY (Auto Sort is Handled Here)
+        // 1. ITINERARY
         function renderItinerary(container) {
             const days = [1, 2, 3, 4, 5, 6, 7];
             const dates = ['4/19', '4/20', '4/21', '4/22', '4/23', '4/24', '4/25'];
@@ -390,8 +390,10 @@
                     const dotWrapper = document.createElement('div');
                     dotWrapper.className = 'absolute left-[5.5rem] top-2 -translate-x-1/2 w-3 h-3 bg-white border-2 rounded-full z-10 ' + getCategoryBorder(item.category);
                     
+                    // Added onClick event for editing
                     const card = document.createElement('div');
-                    card.className = 'flex-1 bg-white rounded-2xl p-4 shadow-soft border border-gray-50 ml-6 active:scale-[0.99] transition-transform duration-200';
+                    card.className = 'flex-1 bg-white rounded-2xl p-4 shadow-soft border border-gray-50 ml-6 active:scale-[0.99] transition-transform duration-200 cursor-pointer';
+                    card.setAttribute('onclick', `openModal('itinerary', '${item.id}')`);
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-1">
                             <h3 class="text-base font-bold text-jeju-text leading-tight">${item.title}</h3>
@@ -399,12 +401,12 @@
                         </div>
                         <div class="flex items-center gap-2 mb-2">
                              <span class="text-[10px] px-2 py-0.5 rounded bg-jeju-bg text-jeju-subtext font-medium">${getCategoryName(item.category)}</span>
-                             <a href="https://map.naver.com/v5/search/${item.location}" target="_blank" class="text-xs text-jeju-blue hover:underline truncate max-w-[120px] flex items-center gap-1">
+                             <a href="https://map.naver.com/v5/search/${item.location}" target="_blank" onclick="event.stopPropagation()" class="text-xs text-jeju-blue hover:underline truncate max-w-[120px] flex items-center gap-1">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${item.location}
                              </a>
                         </div>
                         ${item.notes ? `<p class="text-xs text-jeju-subtext bg-[#FAF9F6] p-2 rounded-lg leading-relaxed border-l-2 border-jeju-accent/30">${item.notes}</p>` : ''}
-                        <button onclick="deleteItem('itinerary', '${item.id}')" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-gray-300 p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                        <button onclick="event.stopPropagation(); deleteItem('itinerary', '${item.id}')" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-gray-300 p-1 hover:text-red-400 transition-opacity"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                     `;
                     row.appendChild(timeCol); row.appendChild(dotWrapper); row.appendChild(card);
                     timelineWrapper.appendChild(row);
@@ -413,7 +415,7 @@
             container.appendChild(timelineWrapper);
         }
 
-        // 2. BUDGET (Added Auto Sort by Date Descending)
+        // 2. BUDGET
         function renderBudget(container) {
             container.className += " px-4";
             const totalKRW = appData.budget.reduce((acc, curr) => acc + parseInt(curr.amount), 0);
@@ -441,17 +443,17 @@
             const list = document.createElement('div');
             list.className = 'space-y-3 pb-8';
             
-            // Auto Sort: Date Descending (Newest first)
+            // Auto Sort: Date Descending
             const sortedBudget = [...appData.budget].sort((a,b) => new Date(b.date) - new Date(a.date));
 
             if(sortedBudget.length === 0) list.innerHTML = `<p class="text-center text-jeju-subtext text-sm py-8">還沒有記帳紀錄</p>`;
             else list.innerHTML = sortedBudget.map(item => `
-                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-50 shadow-sm">
+                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-50 shadow-sm cursor-pointer active:scale-[0.99] transition-transform" onclick="openModal('budget', '${item.id}')">
                     <div class="flex items-center gap-3">
                          <div class="w-10 h-10 rounded-full bg-jeju-bg flex items-center justify-center text-lg text-jeju-text">${getCategoryIcon(item.category)}</div>
                          <div><h4 class="font-bold text-jeju-text text-sm">${item.title}</h4><p class="text-[10px] text-jeju-subtext">${item.date} · ${item.payer === 'sister' ? '姊姊付' : '咪爸妹付'}</p></div>
                     </div>
-                    <div class="text-right"><p class="font-bold text-jeju-text text-sm">₩ ${formatMoney(item.amount)}</p><button onclick="deleteItem('budget', '${item.id}')" class="text-[10px] text-red-300 px-2 py-1">刪除</button></div>
+                    <div class="text-right"><p class="font-bold text-jeju-text text-sm">₩ ${formatMoney(item.amount)}</p><button onclick="event.stopPropagation(); deleteItem('budget', '${item.id}')" class="text-[10px] text-red-300 px-2 py-1 hover:text-red-500">刪除</button></div>
                 </div>
             `).join('');
             container.appendChild(list);
@@ -465,12 +467,12 @@
             const sortedTodos = [...appData.todos].sort((a,b) => a.done - b.done);
 
             list.innerHTML = sortedTodos.map(item => `
-                <div class="bg-white p-4 rounded-2xl shadow-soft border border-gray-50 flex items-start gap-3 ${item.done ? 'opacity-60 bg-gray-50' : ''}">
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${item.id}')" class="custom-checkbox w-5 h-5 mt-1 rounded border-2 border-gray-200 cursor-pointer appearance-none transition-all">
+                <div class="bg-white p-4 rounded-2xl shadow-soft border border-gray-50 flex items-start gap-3 ${item.done ? 'opacity-60 bg-gray-50' : ''} cursor-pointer active:scale-[0.99] transition-transform" onclick="openModal('todo', '${item.id}')">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo('${item.id}')" onclick="event.stopPropagation()" class="custom-checkbox w-5 h-5 mt-1 rounded border-2 border-gray-200 cursor-pointer appearance-none transition-all">
                     <div class="flex-1"><h4 class="font-bold text-jeju-text text-sm ${item.done ? 'line-through text-jeju-subtext' : ''}">${item.title}</h4>
-                        <div class="flex flex-wrap gap-2 mt-2">${renderMiniAvatars(item.participants)}${item.needPay && !item.done ? `<button onclick="transferToBudget('${item.title}')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded border border-green-100 font-bold flex items-center gap-1">加入記帳</button>` : ''}</div>
+                        <div class="flex flex-wrap gap-2 mt-2">${renderMiniAvatars(item.participants)}${item.needPay && !item.done ? `<button onclick="event.stopPropagation(); transferToBudget('${item.title}')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded border border-green-100 font-bold flex items-center gap-1">加入記帳</button>` : ''}</div>
                     </div>
-                    <button onclick="deleteItem('todo', '${item.id}')" class="text-gray-300 hover:text-red-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    <button onclick="event.stopPropagation(); deleteItem('todo', '${item.id}')" class="text-gray-300 hover:text-red-400 p-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                 </div>
             `).join('');
             if(sortedTodos.length === 0) list.innerHTML = `<p class="text-center text-jeju-subtext text-sm mt-10">待辦事項已清空 ✨</p>`;
@@ -522,70 +524,121 @@
         function toggleTodo(id) { const t = appData.todos.find(i=>i.id==id); if(t) { t.done = !t.done; saveToLocal(); render(); } }
         
         // Modal & Form Logic
-        function openAddModal() {
+        // Modified to handle editing: accepts optional 'editId'
+        function openModal(type, editId = null) {
+            // Determine tab type if not provided (for FAB)
+            if(!type) type = currentTab;
+
             const m = document.getElementById('modal-overlay'); m.classList.remove('hidden'); 
             setTimeout(() => { m.classList.remove('opacity-0'); document.getElementById('modal-content').classList.remove('translate-y-full'); }, 10);
             
             const body = document.getElementById('modal-body');
+            const titleEl = document.getElementById('modal-title');
             let formHtml = '';
+            
+            // Get item data if editing
+            let editData = null;
+            if(editId) {
+                if(type === 'itinerary') editData = appData.itinerary.find(i => i.id === editId);
+                else if(type === 'budget') editData = appData.budget.find(i => i.id === editId);
+                else if(type === 'todo') editData = appData.todos.find(i => i.id === editId);
+            }
+
+            const modeText = editData ? '修改' : '新增';
+            titleEl.innerText = `${modeText}${type === 'itinerary' ? '行程' : type === 'budget' ? '記帳' : '待辦'}`;
+
             const inputClass = "w-full bg-gray-50 rounded-xl p-3 border border-gray-100 focus:border-jeju-orange focus:ring-1 focus:ring-jeju-orange outline-none transition-all";
             const btnClass = "w-full bg-jeju-orange text-white font-bold py-3.5 rounded-xl shadow-md active:scale-95 transition-transform mt-2 flex justify-center items-center gap-2";
 
-            if(currentTab === 'itinerary') {
+            if(type === 'itinerary') {
+                const day = editData ? editData.day : currentDay;
+                const time = editData ? editData.time : '';
+                const title = editData ? editData.title : '';
+                const notes = editData ? editData.notes : '';
+                const cat = editData ? editData.category : 'food';
+                const p_sister = editData ? editData.participants.includes('sister') || editData.participants.includes('all') : true;
+                const p_family = editData ? editData.participants.includes('dad_sis') || editData.participants.includes('all') : true;
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'itinerary')" class="space-y-4">
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
                     <div class="grid grid-cols-2 gap-3">
-                        <select name="day" class="${inputClass}"><option value="1">D1 (4/19)</option><option value="2">D2 (4/20)</option><option value="3">D3 (4/21)</option><option value="4">D4 (4/22)</option><option value="5">D5 (4/23)</option><option value="6">D6 (4/24)</option><option value="7">D7 (4/25)</option></select>
-                        <input type="time" name="time" required class="${inputClass}">
+                        <select name="day" class="${inputClass}">
+                            ${[1,2,3,4,5,6,7].map(d => `<option value="${d}" ${d===day?'selected':''}>D${d} (4/${18+d})</option>`).join('')}
+                        </select>
+                        <input type="time" name="time" value="${time}" required class="${inputClass}">
                     </div>
-                    <input type="text" name="title" required placeholder="行程名稱" class="${inputClass}">
+                    <input type="text" name="title" value="${title}" required placeholder="行程名稱" class="${inputClass}">
                     <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                        ${['food','sights','shopping','activity','transport','hotel'].map((c,i) => `
-                        <label class="cursor-pointer"><input type="radio" name="category" value="${c}" class="hidden peer" ${i===0?'checked':''}><div class="py-2 bg-gray-50 rounded-lg border border-transparent peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">${getCategoryName(c)}</div></label>
+                        ${['food','sights','shopping','activity','transport','hotel'].map((c) => `
+                        <label class="cursor-pointer"><input type="radio" name="category" value="${c}" class="hidden peer" ${c===cat?'checked':''}><div class="py-2 bg-gray-50 rounded-lg border border-transparent peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">${getCategoryName(c)}</div></label>
                         `).join('')}
                     </div>
                     <div class="flex gap-3 bg-gray-50 p-3 rounded-xl">
-                        <label class="flex items-center gap-2"><input type="checkbox" name="p_sister" checked class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">姊姊</span></label>
-                        <label class="flex items-center gap-2"><input type="checkbox" name="p_family" checked class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">咪爸妹</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" name="p_sister" ${p_sister?'checked':''} class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">姊姊</span></label>
+                        <label class="flex items-center gap-2"><input type="checkbox" name="p_family" ${p_family?'checked':''} class="custom-checkbox w-4 h-4 rounded"> <span class="text-sm">咪爸妹</span></label>
                     </div>
-                    <textarea name="notes" placeholder="備註..." rows="2" class="${inputClass}"></textarea>
-                    <button type="submit" class="${btnClass}" id="submitBtn">新增</button>
+                    <textarea name="notes" placeholder="備註..." rows="2" class="${inputClass}">${notes}</textarea>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
-            } else if (currentTab === 'budget') {
+            } else if (type === 'budget') {
+                const title = editData ? editData.title : '';
+                const amount = editData ? editData.amount : '';
+                const payer = editData ? editData.payer : 'sister';
+                const cat = editData ? editData.category : 'food';
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'budget')" class="space-y-4">
-                    <input type="text" name="title" id="b-title" required placeholder="項目名稱" class="${inputClass}">
-                    <input type="number" name="amount" required placeholder="金額 (KRW)" class="${inputClass} text-lg font-bold">
-                    <div class="flex gap-2"><label class="flex-1 text-center"><input type="radio" name="payer" value="sister" checked class="hidden peer"><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">姊姊付</div></label><label class="flex-1 text-center"><input type="radio" name="payer" value="dad_sis" class="hidden peer"><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">咪爸妹付</div></label></div>
-                    <select name="category" class="${inputClass}"><option value="food">飲食</option><option value="transport">交通</option><option value="shopping">購物</option><option value="ticket">門票</option><option value="hotel">住宿</option></select>
-                    <button type="submit" class="${btnClass}" id="submitBtn">記帳</button>
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
+                    <input type="text" name="title" id="b-title" value="${title}" required placeholder="項目名稱" class="${inputClass}">
+                    <input type="number" name="amount" value="${amount}" required placeholder="金額 (KRW)" class="${inputClass} text-lg font-bold">
+                    <div class="flex gap-2"><label class="flex-1 text-center"><input type="radio" name="payer" value="sister" class="hidden peer" ${payer==='sister'?'checked':''}><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">姊姊付</div></label><label class="flex-1 text-center"><input type="radio" name="payer" value="dad_sis" class="hidden peer" ${payer==='dad_sis'?'checked':''}><div class="py-3 bg-gray-50 rounded-xl peer-checked:bg-jeju-orange peer-checked:text-white transition-colors">咪爸妹付</div></label></div>
+                    <select name="category" class="${inputClass}">
+                        <option value="food" ${cat==='food'?'selected':''}>飲食</option>
+                        <option value="transport" ${cat==='transport'?'selected':''}>交通</option>
+                        <option value="shopping" ${cat==='shopping'?'selected':''}>購物</option>
+                        <option value="ticket" ${cat==='ticket'?'selected':''}>門票</option>
+                        <option value="hotel" ${cat==='hotel'?'selected':''}>住宿</option>
+                    </select>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
             } else {
+                const title = editData ? editData.title : '';
+                const part = editData && editData.participants.length > 0 ? editData.participants[0] : 'all';
+                const needPay = editData ? editData.needPay : false;
+
                 formHtml = `<form onsubmit="handleFormSubmit(event, 'todo')" class="space-y-4">
-                    <input type="text" name="title" required placeholder="待辦事項" class="${inputClass}">
-                    <select name="participant" class="${inputClass}"><option value="all">全員</option><option value="sister">姊姊</option><option value="dad_sis">咪爸妹</option></select>
-                    <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl"><input type="checkbox" name="needPay" class="custom-checkbox w-5 h-5 rounded"> <span class="text-sm text-gray-600">需要花錢?</span></label>
-                    <button type="submit" class="${btnClass}" id="submitBtn">新增</button>
+                    ${editId ? `<input type="hidden" name="id" value="${editId}">` : ''}
+                    <input type="text" name="title" value="${title}" required placeholder="待辦事項" class="${inputClass}">
+                    <select name="participant" class="${inputClass}">
+                        <option value="all" ${part==='all'?'selected':''}>全員</option>
+                        <option value="sister" ${part==='sister'?'selected':''}>姊姊</option>
+                        <option value="dad_sis" ${part==='dad_sis'?'selected':''}>咪爸妹</option>
+                    </select>
+                    <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl"><input type="checkbox" name="needPay" ${needPay?'checked':''} class="custom-checkbox w-5 h-5 rounded"> <span class="text-sm text-gray-600">需要花錢?</span></label>
+                    <button type="submit" class="${btnClass}" id="submitBtn">${modeText}</button>
                 </form>`;
             }
             body.innerHTML = formHtml;
-             if(currentTab === 'itinerary') {
-                setTimeout(() => { const sel = body.querySelector('select[name="day"]'); if(sel) sel.value = currentDay; }, 50);
-            }
         }
+        
+        // Renamed wrapper for FAB to maintain 'Add' context, calls generic modal opener
+        function openAddModal() {
+            openModal(currentTab);
+        }
+
         function closeModal() {
             const m = document.getElementById('modal-overlay'); m.classList.add('opacity-0'); document.getElementById('modal-content').classList.add('translate-y-full'); setTimeout(() => m.classList.add('hidden'), 300);
         }
-        function transferToBudget(title) { switchTab('budget'); openAddModal(); setTimeout(() => document.getElementById('b-title').value = title, 100); }
+        function transferToBudget(title) { switchTab('budget'); openModal('budget'); setTimeout(() => document.getElementById('b-title').value = title, 100); }
 
         function handleFormSubmit(e, type) {
             e.preventDefault();
             
-            // UI Loading State
             const btn = document.getElementById('submitBtn');
-            const originalText = btn.innerText;
             btn.innerHTML = `<div class="spinner"></div>`;
             btn.disabled = true;
 
             const formData = new FormData(e.target);
+            const editId = formData.get('id');
             let newItem = null;
 
             if (type === 'itinerary') {
@@ -595,7 +648,7 @@
                 if(participants.length === 0) participants.push('all'); 
 
                 newItem = {
-                    id: generateId(),
+                    id: editId || generateId(),
                     day: parseInt(formData.get('day')),
                     time: formData.get('time'),
                     title: formData.get('title'),
@@ -605,40 +658,61 @@
                     notes: formData.get('notes'),
                     participants: participants
                 };
-                appData.itinerary.push(newItem);
+                
+                if (editId) {
+                    const idx = appData.itinerary.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.itinerary[idx] = newItem;
+                } else {
+                    appData.itinerary.push(newItem);
+                }
                 currentDay = newItem.day;
             } else if (type === 'budget') {
                 newItem = {
-                    id: generateId(),
+                    id: editId || generateId(),
                     title: formData.get('title'),
                     amount: parseInt(formData.get('amount')),
                     payer: formData.get('payer'),
                     category: formData.get('category'),
                     date: new Date().toISOString().split('T')[0]
                 };
-                appData.budget.unshift(newItem); 
+                
+                if (editId) {
+                    const idx = appData.budget.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.budget[idx] = newItem;
+                } else {
+                    appData.budget.unshift(newItem); 
+                }
             } else if (type === 'todo') {
                 newItem = {
-                    id: generateId(),
+                    id: editId || generateId(),
                     title: formData.get('title'),
-                    done: false,
+                    done: false, // Reset done status on edit? Or keep it? keeping simplistic for now
                     participants: [formData.get('participant')],
                     needPay: formData.get('needPay') === 'on'
                 };
-                appData.todos.push(newItem);
+                // If editing, preserve 'done' status
+                if (editId) {
+                    const oldItem = appData.todos.find(i => i.id === editId);
+                    if (oldItem) newItem.done = oldItem.done;
+                    
+                    const idx = appData.todos.findIndex(i => i.id === editId);
+                    if (idx !== -1) appData.todos[idx] = newItem;
+                } else {
+                    appData.todos.push(newItem);
+                }
             }
 
             // 1. Save Local
             saveToLocal();
             
-            // 2. Sync to Cloud (Fire and Forget)
+            // 2. Sync to Cloud (Fire and Forget) - Works for both Add (Append) and Edit (Append new version)
             syncToGoogleSheets(type, newItem);
 
             // 3. UI Updates
             setTimeout(() => {
                 closeModal();
                 render();
-            }, 500); // Fake delay for UX
+            }, 500); 
         }
 
         render();
